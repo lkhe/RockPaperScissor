@@ -1,6 +1,7 @@
 package com.eric.rockpaperscissor
 
 import android.app.AlertDialog
+import android.content.Context
 import android.content.DialogInterface
 import android.content.Intent
 import androidx.appcompat.app.AppCompatActivity
@@ -167,7 +168,7 @@ class GameActivity : AppCompatActivity(), PurchaseUtil.onLoadProductListener {
             .setNegativeButton("No thanks", DialogInterface.OnClickListener{
                 dialog, which ->
                 dialog.dismiss()
-                recreate()
+                returnHomePage()
             })
         dialog.show()
     }
@@ -195,17 +196,22 @@ class GameActivity : AppCompatActivity(), PurchaseUtil.onLoadProductListener {
 
                             } else {
                                 Log.e("GameActivity", "onActivityResult(): CipherUtil.doCheck return false")
+                                returnHomePage()
                                 Toast.makeText(this, "Error: error code", Toast.LENGTH_SHORT).show()
                             }
                         }
                 }
                 OrderStatusCode.ORDER_STATE_CANCEL -> {
+                    returnHomePage()
                     Toast.makeText(this, "Order cancelled", Toast.LENGTH_SHORT).show()
                 }
                 OrderStatusCode.ORDER_PRODUCT_OWNED -> {
                     //not applicable for this app?
                 }
-                else -> Toast.makeText(this, "Payment not successful", Toast.LENGTH_SHORT).show()
+                else -> {
+                    returnHomePage()
+                    Toast.makeText(this, "Payment not successful", Toast.LENGTH_SHORT).show()
+                }
             }
         }
     }
@@ -217,6 +223,11 @@ class GameActivity : AppCompatActivity(), PurchaseUtil.onLoadProductListener {
             heartTwo.text = String(Character.toChars(0x2764))
             heartThree.text = String(Character.toChars(0x2764))
         }
+    }
+
+    private fun returnHomePage() {
+        startActivity(Intent(this, LaunchActivity::class.java))
+        finish()
     }
 
     override fun onProductLoaded(list: List<ProductInfo>?) {

@@ -60,6 +60,9 @@ dependencies {
     implementation 'androidx.emoji:emoji:1.0.0'
     implementation 'androidx.emoji:emoji-bundled:1.0.0'
 
-    //IAP
+    //IAP kit
     implementation 'com.huawei.hms:iap:4.0.0.300'
+
+    //Ads kit
+    implementation 'com.huawei.hms:ads-lite:13.4.29.303'
 }
