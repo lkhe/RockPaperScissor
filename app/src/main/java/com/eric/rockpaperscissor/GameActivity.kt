@@ -36,7 +36,7 @@ class GameActivity : AppCompatActivity(), PurchaseUtil.onLoadProductListener {
     private var playerDecision: Int? = null
     private var numberOfHearts:Int = 3
     private var score:Int = 0
-    private var productInfo:List<ProductInfo>? = null
+    private lateinit var productInfo:List<ProductInfo>
     private lateinit var purchaseUtil: PurchaseUtil
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -154,15 +154,15 @@ class GameActivity : AppCompatActivity(), PurchaseUtil.onLoadProductListener {
             .setTitle("Game Over")
             .setMessage(StringBuilder("You have lost, ")
                 .append("buy more " + String(Character.toChars(0x2764)) + " to continue?").append("\n\n")
-                .append(if (!productInfo.isNullOrEmpty()) productInfo!![0].productName + " for " + productInfo!![0].price else "").appendln())
-//                .append(if (!productInfo.isNullOrEmpty()) productInfo!![1].productName + " for " + productInfo!![1].price else "").appendln()
-//                .append(if (!productInfo.isNullOrEmpty()) productInfo!![2].productName + " for " + productInfo!![2].price else ""))
+                .append(productInfo[0].productName + " for " + productInfo[0].price).appendln())
+//                .append(productInfo[1].productName + " for " + productInfo[1].price).appendln()
+//                .append(productInfo[2].productName + " for " + productInfo[2].price))
             .setCancelable(false)
             .setPositiveButton("Buy", DialogInterface.OnClickListener{
                 dialog, which ->
                 dialog.dismiss()
                 //ToDO: add a product page
-                purchaseUtil.purchase(this, productInfo!![0].productId, productInfo!![0].priceType, PurchaseUtil.REQ_CODE_BUY_THREE_HEARTS)
+                purchaseUtil.purchase(this, productInfo[0].productId, productInfo[0].priceType, PurchaseUtil.REQ_CODE_BUY_THREE_HEARTS)
 
             })
             .setNegativeButton("No thanks", DialogInterface.OnClickListener{
@@ -184,15 +184,17 @@ class GameActivity : AppCompatActivity(), PurchaseUtil.onLoadProductListener {
             val purchaseResultInfo = Iap.getIapClient(this).parsePurchaseResultInfoFromIntent(data)
             when (purchaseResultInfo.returnCode) {
                 OrderStatusCode.ORDER_STATE_SUCCESS -> {
-                    CipherUtil.doCheck(purchaseResultInfo.inAppPurchaseData, purchaseResultInfo.inAppDataSignature, Key.getPublicKey())
+                    CipherUtil.doCheck(purchaseResultInfo.inAppPurchaseData,
+                        purchaseResultInfo.inAppDataSignature,
+                        Key.getPublicKey())
                         .also {
                             if (it) { //purchase success
-                                Log.i("GameActivity","need to consume owned product")
-                                //TODO: what to do after purchase success, e.g. deliver product
                                 addHearts(PurchaseUtil.REQ_CODE_BUY_THREE_HEARTS)
                                 score += 3
                                 buttonsEnabled(true)
-                                purchaseUtil.consumeOwnedPurchase(this, purchaseResultInfo.inAppPurchaseData)
+                                purchaseUtil.consumeOwnedPurchase(this,
+                                    purchaseResultInfo.inAppPurchaseData)
+                                Log.i("GameActivity", "data: " + purchaseResultInfo.inAppPurchaseData.toString())
 
                             } else {
                                 Log.e("GameActivity", "onActivityResult(): CipherUtil.doCheck return false")
@@ -233,7 +235,7 @@ class GameActivity : AppCompatActivity(), PurchaseUtil.onLoadProductListener {
     override fun onProductLoaded(list: List<ProductInfo>?) {
         //TODO:
         Log.i("GameActivity","onProductLoaded() " + list.toString())
-        if (!list.isNullOrEmpty()) productInfo=list
+        if (list != null) productInfo = list
     }
 
 

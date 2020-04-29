@@ -99,7 +99,6 @@ class PurchaseUtil() {
     fun consumeOwnedPurchase(context: Context, inAppPurchaseData:String) {
         Log.i("PurchaseUtil","consumeOwnedPurchase()")
         val iapClient = Iap.getIapClient(context)
-        //TODO: real deliver here, before calling the consumeownedpurchase api
         val task = iapClient.consumeOwnedPurchase(createConsumeOwnedPurchaseReq(inAppPurchaseData))
         task.addOnSuccessListener {
             Log.i("PurchaseUtil", "consumeOwnedPurchase success")
@@ -138,11 +137,14 @@ class PurchaseUtil() {
                 for (i in 0..it.inAppPurchaseDataList.size -1) {
                     val inAppPurchaseData = it.inAppPurchaseDataList.get(i)
                     val inAppSignature = it.inAppSignature.get(i)
-                    val success = CipherUtil.doCheck(inAppPurchaseData, inAppSignature, Key.getPublicKey())
+                    val success = CipherUtil.doCheck(inAppPurchaseData,
+                        inAppSignature,
+                        Key.getPublicKey())
                     if (success) try {
                         val inAppPurchaseDataBean = InAppPurchaseData(inAppPurchaseData)
                         val purchaseState = inAppPurchaseDataBean.purchaseState
-                        if (purchaseState == 0) consumeOwnedPurchase(activity!!.applicationContext, inAppPurchaseData)
+                        if (purchaseState == 0)
+                            consumeOwnedPurchase(activity!!.applicationContext, inAppPurchaseData)
                     } catch (ex:JSONException) {
                         Log.e("PurchaseUtil","checkIfPurchasedNeedRedeliver() JSONException" + ex.localizedMessage)
                     } catch (ex : Exception) {
@@ -164,8 +166,6 @@ class PurchaseUtil() {
     interface onLoadProductListener {
         fun onProductLoaded(list:List<ProductInfo>?)
     }
-
-    interface onProductPurchasedListener
 
     companion object {
         const val REQ_CODE_BUY_THREE_HEARTS = 1001

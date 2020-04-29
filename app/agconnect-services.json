@@ -1,0 +1,12 @@
+{
+	"client":{
+		"cp_id":"890852200000000072",
+		"product_id":"736430079244419724",
+		"client_id":"349856147571737728",
+		"client_secret":"F2309A7D11B8D530F9E4E2870AF11E343C7FA6D0F910DF99E9043C5706401AC2",
+		"app_id":"102122169",
+		"package_name":"com.eric.rockpaperscissor",
+		"api_key":"CV7OLMFPRm2IWgIPl979Wt6BgxWqdpkQMX0cl9KYYFF4RUTXz1nQi1fkm0nruCk4SlcTGIGMloyxWjp2Iv7T45q+pc0y"
+	},
+	"configuration_version":"1.0"
+}
