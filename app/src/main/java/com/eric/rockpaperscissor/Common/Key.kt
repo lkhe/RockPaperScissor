@@ -1,4 +1,4 @@
-package com.eric.rockpaperscissor.common
+package com.eric.rockpaperscissor.Common
 
 class Key {
 

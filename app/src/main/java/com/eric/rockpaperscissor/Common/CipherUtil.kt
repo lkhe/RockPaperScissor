@@ -1,4 +1,4 @@
-package com.eric.rockpaperscissor.common
+package com.eric.rockpaperscissor.Common
 
 import android.text.TextUtils
 import android.util.Base64

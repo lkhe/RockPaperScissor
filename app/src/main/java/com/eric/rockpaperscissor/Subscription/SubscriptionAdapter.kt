@@ -1,4 +1,4 @@
-package com.eric.rockpaperscissor
+package com.eric.rockpaperscissor.Subscription
 
 import android.app.Activity
 import android.graphics.Color
@@ -6,6 +6,8 @@ import android.net.Uri
 import android.view.LayoutInflater
 import android.view.ViewGroup
 import androidx.recyclerview.widget.RecyclerView
+import com.eric.rockpaperscissor.BuildConfig
+import com.eric.rockpaperscissor.R
 import com.huawei.hms.iap.entity.ProductInfo
 
 class SubscriptionAdapter(
@@ -18,7 +20,9 @@ class SubscriptionAdapter(
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): SubscriptionViewHolder {
         val rootView =
             LayoutInflater.from(parent.context).inflate(R.layout.subscription_item, parent, false)
-        return SubscriptionViewHolder(rootView)
+        return SubscriptionViewHolder(
+            rootView
+        )
     }
 
     override fun getItemCount(): Int {

@@ -1,4 +1,4 @@
-package com.eric.rockpaperscissor
+package com.eric.rockpaperscissor.Subscription
 
 import android.app.Activity
 import android.app.ProgressDialog
@@ -12,8 +12,10 @@ import android.widget.Toast
 import androidx.localbroadcastmanager.content.LocalBroadcastManager
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
-import com.eric.rockpaperscissor.common.CipherUtil
-import com.eric.rockpaperscissor.common.Key
+import com.eric.rockpaperscissor.Common.CipherUtil
+import com.eric.rockpaperscissor.Common.Key
+import com.eric.rockpaperscissor.Common.PurchaseUtil
+import com.eric.rockpaperscissor.R
 import com.huawei.hms.iap.Iap
 import com.huawei.hms.iap.IapClient
 import com.huawei.hms.iap.entity.OrderStatusCode
@@ -37,7 +39,10 @@ class SubscriptionActivity : AppCompatActivity(), PurchaseUtil.OnLoadedSubscript
 
     override fun onResume() {
         super.onResume()
-        subscriptionLoadedReceiver = SubscriptionLoadedReceiver(this)
+        subscriptionLoadedReceiver =
+            SubscriptionLoadedReceiver(
+                this
+            )
         LocalBroadcastManager.getInstance(this)
             .registerReceiver(subscriptionLoadedReceiver, IntentFilter("SubscriptionLoaded"))
 
@@ -70,7 +75,11 @@ class SubscriptionActivity : AppCompatActivity(), PurchaseUtil.OnLoadedSubscript
         if (subscriptionProductInfo != null && subscribedProducts != null) {
             subscriptionRecyclerView = findViewById(R.id.subscription_recyclerView)
             subscriptionRecyclerView.adapter =
-                SubscriptionAdapter(subscriptionProductInfo, subscribedProducts, this)
+                SubscriptionAdapter(
+                    subscriptionProductInfo,
+                    subscribedProducts,
+                    this
+                )
             subscriptionRecyclerView.layoutManager = LinearLayoutManager(this)
         } else {
             //TODO:error page

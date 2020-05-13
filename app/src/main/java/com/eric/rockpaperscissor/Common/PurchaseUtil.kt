@@ -1,12 +1,10 @@
-package com.eric.rockpaperscissor
+package com.eric.rockpaperscissor.Common
 
 import android.app.Activity
 import android.content.Context
 import android.content.IntentSender
 import android.util.Log
 import android.widget.Toast
-import com.eric.rockpaperscissor.common.CipherUtil
-import com.eric.rockpaperscissor.common.Key
 import com.huawei.hms.iap.Iap
 import com.huawei.hms.iap.IapApiException
 import com.huawei.hms.iap.IapClient

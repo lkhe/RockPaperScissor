@@ -1,4 +1,4 @@
-package com.eric.rockpaperscissor
+package com.eric.rockpaperscissor.Game
 
 import android.app.Activity
 import android.app.AlertDialog
@@ -13,15 +13,20 @@ import android.widget.ImageView
 import android.widget.TextView
 import android.widget.Toast
 import androidx.emoji.widget.EmojiTextView
-import com.eric.rockpaperscissor.common.CipherUtil
-import com.eric.rockpaperscissor.common.Key
+import com.eric.rockpaperscissor.Launch.LaunchActivity
+import com.eric.rockpaperscissor.Common.PurchaseUtil
+import com.eric.rockpaperscissor.R
+import com.eric.rockpaperscissor.Subscription.SubscriptionActivity
+import com.eric.rockpaperscissor.Common.CipherUtil
+import com.eric.rockpaperscissor.Common.Key
 import com.huawei.hms.iap.Iap
 import com.huawei.hms.iap.entity.OrderStatusCode
 import com.huawei.hms.iap.entity.ProductInfo
 import java.lang.StringBuilder
 
 
-class GameActivity : AppCompatActivity(), PurchaseUtil.OnLoadedConsumablesInfoListener,
+class GameActivity : AppCompatActivity(),
+    PurchaseUtil.OnLoadedConsumablesInfoListener,
     PurchaseUtil.OnLoadedSubscriptionStatusListener {
 
     private lateinit var rockButton: Button
@@ -241,7 +246,8 @@ class GameActivity : AppCompatActivity(), PurchaseUtil.OnLoadedConsumablesInfoLi
                         OrderStatusCode.ORDER_STATE_SUCCESS -> {
                             addHearts(PurchaseUtil.REQ_CODE_BUY_THREE_HEARTS)
                             buttonsEnabled(true)
-                            PurchaseUtil.getInstance().consumeOwnedPurchase(
+                            PurchaseUtil.getInstance()
+                                .consumeOwnedPurchase(
                                 this,
                                 purchaseResultInfo.inAppPurchaseData
                             )
@@ -282,7 +288,8 @@ class GameActivity : AppCompatActivity(), PurchaseUtil.OnLoadedConsumablesInfoLi
             when (requestCode) {
                 TO_SUBSCRIPTION_PAGE -> {
                     // from subscription page come back, need to check subscription status again
-                    PurchaseUtil.getInstance().getSubscribed(this)
+                    PurchaseUtil.getInstance()
+                        .getSubscribed(this)
                 }
                 else -> {
                     returnHomePage()
@@ -394,7 +401,9 @@ class GameActivity : AppCompatActivity(), PurchaseUtil.OnLoadedConsumablesInfoLi
             messageString = playerMessageString + "\n" + opponentMessageString
         }
 
-        createStatisticsDialog("Statistics", messageString, R.drawable.ic_stats).show()
+        createStatisticsDialog("Statistics", messageString,
+            R.drawable.ic_stats
+        ).show()
     }
 
     private fun createStatisticsDialog(

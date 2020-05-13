@@ -1,4 +1,4 @@
-package com.eric.rockpaperscissor
+package com.eric.rockpaperscissor.Launch
 
 import android.content.Intent
 import android.content.pm.ActivityInfo
@@ -6,6 +6,7 @@ import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.os.Handler
 import android.util.Log
+import com.eric.rockpaperscissor.R
 import com.huawei.hms.ads.AdParam
 import com.huawei.hms.ads.AudioFocusType
 import com.huawei.hms.ads.splash.SplashView
@@ -51,7 +52,10 @@ class SplashActivity : AppCompatActivity() {
         )
         Log.i("SplashActivity", "End to load ad")
         timeoutHandler.removeMessages(MSG_AD_TIMEOUT)
-        timeoutHandler.sendEmptyMessageDelayed(MSG_AD_TIMEOUT, AD_TIMEOUT)
+        timeoutHandler.sendEmptyMessageDelayed(
+            MSG_AD_TIMEOUT,
+            AD_TIMEOUT
+        )
     }
 
 

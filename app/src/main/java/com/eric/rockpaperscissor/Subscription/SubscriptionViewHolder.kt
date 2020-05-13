@@ -1,9 +1,10 @@
-package com.eric.rockpaperscissor
+package com.eric.rockpaperscissor.Subscription
 
 import android.view.View
 import android.widget.Button
 import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
+import com.eric.rockpaperscissor.R
 
 class SubscriptionViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
     var productTextView: TextView

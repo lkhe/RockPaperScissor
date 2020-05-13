@@ -1,4 +1,4 @@
-package com.eric.rockpaperscissor
+package com.eric.rockpaperscissor.Subscription
 
 import android.content.BroadcastReceiver
 import android.content.Context

@@ -1,9 +1,11 @@
-package com.eric.rockpaperscissor
+package com.eric.rockpaperscissor.Launch
 
 import android.content.Intent
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.widget.Button
+import com.eric.rockpaperscissor.Game.GameActivity
+import com.eric.rockpaperscissor.R
 import com.huawei.hms.ads.AdParam
 import com.huawei.hms.ads.HwAds
 import com.huawei.hms.ads.banner.BannerView
