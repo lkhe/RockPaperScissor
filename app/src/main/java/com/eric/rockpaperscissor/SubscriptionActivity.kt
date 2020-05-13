@@ -8,7 +8,6 @@ import android.net.Uri
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.util.Log
-import android.view.View
 import android.widget.Toast
 import androidx.localbroadcastmanager.content.LocalBroadcastManager
 import androidx.recyclerview.widget.LinearLayoutManager
@@ -19,17 +18,16 @@ import com.huawei.hms.iap.Iap
 import com.huawei.hms.iap.IapClient
 import com.huawei.hms.iap.entity.OrderStatusCode
 import com.huawei.hms.iap.entity.ProductInfo
-import kotlinx.coroutines.*
 
 class SubscriptionActivity : AppCompatActivity(), PurchaseUtil.OnLoadedSubscriptionInfoListener,
-    SubscriptionAdapter.OnSubscriptionItemClicked, PurchaseUtil.OnLoadedSubscriptionStatusListener, SubscriptionLoadedReceiver.OnLoadedAllListener {
+    SubscriptionAdapter.OnSubscriptionItemClicked, PurchaseUtil.OnLoadedSubscriptionStatusListener,
+    SubscriptionLoadedReceiver.OnLoadedAllListener {
 
     private lateinit var subscriptionRecyclerView: RecyclerView
     private lateinit var subscriptionProductInfo: List<ProductInfo>
     private lateinit var subscribedProducts: ArrayList<String>
     private lateinit var progressDialog: ProgressDialog
-    private lateinit var subscriptionLoadedReceiver : SubscriptionLoadedReceiver
-    private lateinit var job: Job
+    private lateinit var subscriptionLoadedReceiver: SubscriptionLoadedReceiver
 
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -40,7 +38,8 @@ class SubscriptionActivity : AppCompatActivity(), PurchaseUtil.OnLoadedSubscript
     override fun onResume() {
         super.onResume()
         subscriptionLoadedReceiver = SubscriptionLoadedReceiver(this)
-        LocalBroadcastManager.getInstance(this).registerReceiver(subscriptionLoadedReceiver, IntentFilter("SubscriptionLoaded"))
+        LocalBroadcastManager.getInstance(this)
+            .registerReceiver(subscriptionLoadedReceiver, IntentFilter("SubscriptionLoaded"))
 
         PurchaseUtil.getInstance().getSubscribed(this)
         PurchaseUtil.getInstance().loadSubscriptionProduct(this)
@@ -70,14 +69,15 @@ class SubscriptionActivity : AppCompatActivity(), PurchaseUtil.OnLoadedSubscript
         progressDialog.dismiss()
         if (subscriptionProductInfo != null && subscribedProducts != null) {
             subscriptionRecyclerView = findViewById(R.id.subscription_recyclerView)
-            subscriptionRecyclerView.adapter = SubscriptionAdapter(subscriptionProductInfo, subscribedProducts, this)
+            subscriptionRecyclerView.adapter =
+                SubscriptionAdapter(subscriptionProductInfo, subscribedProducts, this)
             subscriptionRecyclerView.layoutManager = LinearLayoutManager(this)
         } else {
             //TODO:error page
         }
     }
 
-    override fun OnSubscriptionItemClicked(productId: String?, isSubscribed:Boolean, url:Uri) {
+    override fun OnSubscriptionItemClicked(productId: String?, isSubscribed: Boolean, url: Uri) {
         var code = 0
         when (productId) {
             "Statistics" -> code = PurchaseUtil.REQ_CODE_SUBSCRIBE_BOTH
@@ -91,7 +91,8 @@ class SubscriptionActivity : AppCompatActivity(), PurchaseUtil.OnLoadedSubscript
             startActivity(intent)
         } else {
             if (productId != null) {
-                PurchaseUtil.getInstance().purchase(this, productId, IapClient.PriceType.IN_APP_SUBSCRIPTION, code)
+                PurchaseUtil.getInstance()
+                    .purchase(this, productId, IapClient.PriceType.IN_APP_SUBSCRIPTION, code)
             }
         }
     }
@@ -99,9 +100,13 @@ class SubscriptionActivity : AppCompatActivity(), PurchaseUtil.OnLoadedSubscript
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         super.onActivityResult(requestCode, resultCode, data)
         val purchaseResultInfo = Iap.getIapClient(this).parsePurchaseResultInfoFromIntent(data)
-        val isSecure = CipherUtil.doCheck(purchaseResultInfo.inAppPurchaseData, purchaseResultInfo.inAppDataSignature, Key.getPublicKey())
+        val isSecure = CipherUtil.doCheck(
+            purchaseResultInfo.inAppPurchaseData,
+            purchaseResultInfo.inAppDataSignature,
+            Key.getPublicKey()
+        )
 
-        if (resultCode == Activity.RESULT_OK && data != null &&  isSecure) {
+        if (resultCode == Activity.RESULT_OK && data != null && isSecure) {
             when (requestCode) {
                 PurchaseUtil.REQ_CODE_SUBSCRIBE_ME -> {
                     when (purchaseResultInfo.returnCode) {
@@ -113,7 +118,10 @@ class SubscriptionActivity : AppCompatActivity(), PurchaseUtil.OnLoadedSubscript
                                 subscribedProducts.remove("MyStatistics")
                             }
                             subscriptionRecyclerView.adapter?.notifyDataSetChanged()
-                            setResult(Activity.RESULT_OK, Intent().putExtra("REQ_CODE", requestCode))
+                            setResult(
+                                Activity.RESULT_OK,
+                                Intent().putExtra("REQ_CODE", requestCode)
+                            )
                         }
                         OrderStatusCode.ORDER_STATE_CANCEL -> {
                             Toast.makeText(this, "Order cancelled", Toast.LENGTH_SHORT).show()
@@ -122,7 +130,8 @@ class SubscriptionActivity : AppCompatActivity(), PurchaseUtil.OnLoadedSubscript
                             //not applicable for this app?
                         }
                         else -> {
-                            Toast.makeText(this, "Payment not successful", Toast.LENGTH_SHORT).show()
+                            Toast.makeText(this, "Payment not successful", Toast.LENGTH_SHORT)
+                                .show()
                         }
                     }
                 }
@@ -130,31 +139,44 @@ class SubscriptionActivity : AppCompatActivity(), PurchaseUtil.OnLoadedSubscript
                     when (purchaseResultInfo.returnCode) {
                         OrderStatusCode.ORDER_STATE_SUCCESS -> {
                             subscriptionRecyclerView.adapter?.notifyDataSetChanged()
-                            setResult(Activity.RESULT_OK, Intent().putExtra("REQ_CODE", requestCode))
+                            setResult(
+                                Activity.RESULT_OK,
+                                Intent().putExtra("REQ_CODE", requestCode)
+                            )
                         }
                         OrderStatusCode.ORDER_STATE_CANCEL -> {
                             Toast.makeText(this, "Order cancelled", Toast.LENGTH_SHORT).show()
                         }
-                        OrderStatusCode.ORDER_PRODUCT_OWNED -> {}
-                        else -> { Toast.makeText(this, "Payment not successful", Toast.LENGTH_SHORT).show() }
+                        OrderStatusCode.ORDER_PRODUCT_OWNED -> {
+                        }
+                        else -> {
+                            Toast.makeText(this, "Payment not successful", Toast.LENGTH_SHORT)
+                                .show()
+                        }
                     }
                 }
                 PurchaseUtil.REQ_CODE_SUBSCRIBE_BOTH -> {
                     when (purchaseResultInfo.returnCode) {
                         OrderStatusCode.ORDER_STATE_SUCCESS -> {
                             subscriptionRecyclerView.adapter?.notifyDataSetChanged()
-                            setResult(Activity.RESULT_OK, Intent().putExtra("REQ_CODE", requestCode))
+                            setResult(
+                                Activity.RESULT_OK,
+                                Intent().putExtra("REQ_CODE", requestCode)
+                            )
                         }
                         OrderStatusCode.ORDER_STATE_CANCEL -> {
                             Toast.makeText(this, "Order cancelled", Toast.LENGTH_SHORT).show()
                         }
-                        OrderStatusCode.ORDER_PRODUCT_OWNED -> {}
+                        OrderStatusCode.ORDER_PRODUCT_OWNED -> {
+                        }
                         else -> {
-                            Toast.makeText(this, "Payment not successful", Toast.LENGTH_SHORT).show()
+                            Toast.makeText(this, "Payment not successful", Toast.LENGTH_SHORT)
+                                .show()
                         }
                     }
                 }
-                else -> {}
+                else -> {
+                }
             }
         } else {
             //TODO:handle exceptions

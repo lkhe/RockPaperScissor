@@ -16,7 +16,7 @@ import java.lang.Exception
 
 class PurchaseUtil private constructor() {
 
-    fun loadConsumablesProduct(activity: Activity){
+    fun loadConsumablesProduct(activity: Activity) {
         val iapClient = Iap.getIapClient(activity)
         val task = iapClient.obtainProductInfo(createConsumablesProductReq())
         task.addOnSuccessListener {
@@ -31,12 +31,11 @@ class PurchaseUtil private constructor() {
             }
     }
 
-     fun loadSubscriptionProduct(activity: Activity){
+    fun loadSubscriptionProduct(activity: Activity) {
         val iapClient = Iap.getIapClient(activity)
         val task = iapClient.obtainProductInfo(createSubscriptionProductReq())
         task.addOnSuccessListener {
             if (it != null && !it.productInfoList.isEmpty()) {
-                //TODO:try
                 (activity as OnLoadedSubscriptionInfoListener).onLoadedSubscriptionInfo(it.productInfoList)
             }
         }
@@ -47,7 +46,7 @@ class PurchaseUtil private constructor() {
             }
     }
 
-    private fun createConsumablesProductReq() : ProductInfoReq {
+    private fun createConsumablesProductReq(): ProductInfoReq {
         val req = ProductInfoReq()
         // In-app product type contains:
         // 0: consumable
@@ -62,7 +61,7 @@ class PurchaseUtil private constructor() {
         return req
     }
 
-    private fun createSubscriptionProductReq() : ProductInfoReq {
+    private fun createSubscriptionProductReq(): ProductInfoReq {
         val req = ProductInfoReq()
         // In-app product type contains:
         // 0: consumable
@@ -78,25 +77,24 @@ class PurchaseUtil private constructor() {
     }
 
 
-
-    fun purchase(activity: Activity, productId:String, type:Int, requestCode:Int) {
-        Log.i("PurchaseUtil","purchase()")
+    fun purchase(activity: Activity, productId: String, type: Int, requestCode: Int) {
+        Log.i("PurchaseUtil", "purchase()")
         val iapClient = Iap.getIapClient(activity)
-        val task = iapClient.createPurchaseIntent(createPuchaseIntentReq(productId,type))
+        val task = iapClient.createPurchaseIntent(createPuchaseIntentReq(productId, type))
         task.addOnSuccessListener {
             if (it == null) {
-                Log.e("PurchaseUtil","purchase(): purchaseintentresult is null")
+                Log.e("PurchaseUtil", "purchase(): purchaseintentresult is null")
                 return@addOnSuccessListener
             } else {
                 val status = it.status
                 if (status == null) {
-                    Log.e("PurchaseUtil","purchase(): purchaseintentresult.status is null")
+                    Log.e("PurchaseUtil", "purchase(): purchaseintentresult.status is null")
                     return@addOnSuccessListener
                 } else {
                     if (status.hasResolution()) {
                         try {
                             status.startResolutionForResult(activity, requestCode)
-                        } catch (ex : IntentSender.SendIntentException) {
+                        } catch (ex: IntentSender.SendIntentException) {
                             Log.e("PurchaseUtil", ex.localizedMessage)
                         }
                     } else {
@@ -118,7 +116,7 @@ class PurchaseUtil private constructor() {
             }
     }
 
-    private fun createPuchaseIntentReq(productId: String,type: Int) : PurchaseIntentReq {
+    private fun createPuchaseIntentReq(productId: String, type: Int): PurchaseIntentReq {
         val req = PurchaseIntentReq()
         req.productId = productId
         req.priceType = type
@@ -130,13 +128,17 @@ class PurchaseUtil private constructor() {
      * Consume the unconsumed purchase with type 0 after successfully delivering the product, then the Huawei payment server will update the order status and the user can purchase the product again.
      * @param inAppPurchaseData JSON string that contains purchase order details.
      */
-    fun consumeOwnedPurchase(context: Context, inAppPurchaseData:String) {
-        Log.i("PurchaseUtil","consumeOwnedPurchase()")
+    fun consumeOwnedPurchase(context: Context, inAppPurchaseData: String) {
+        Log.i("PurchaseUtil", "consumeOwnedPurchase()")
         val iapClient = Iap.getIapClient(context)
         val task = iapClient.consumeOwnedPurchase(createConsumeOwnedPurchaseReq(inAppPurchaseData))
         task.addOnSuccessListener {
             Log.i("PurchaseUtil", "consumeOwnedPurchase success")
-            Toast.makeText(context, "Pay success, and the product has been delivered", Toast.LENGTH_SHORT).show()
+            Toast.makeText(
+                context,
+                "Pay success, and the product has been delivered",
+                Toast.LENGTH_SHORT
+            ).show()
         }
             .addOnFailureListener {
                 Log.e("PurchaseUtil", "consumeOwnedPuschase() failure " + it.localizedMessage)
@@ -151,13 +153,13 @@ class PurchaseUtil private constructor() {
             }
     }
 
-    private fun createConsumeOwnedPurchaseReq(inAppPurchaseData:String) : ConsumeOwnedPurchaseReq {
+    private fun createConsumeOwnedPurchaseReq(inAppPurchaseData: String): ConsumeOwnedPurchaseReq {
         val req = ConsumeOwnedPurchaseReq()
         try {
             val inAppPurchaseData = InAppPurchaseData(inAppPurchaseData)
             req.purchaseToken = inAppPurchaseData.purchaseToken
-        } catch (ex:JSONException) {
-            Log.e("PurchaseUtil","createConsumeOwnedPurchaseReq() " + ex.localizedMessage)
+        } catch (ex: JSONException) {
+            Log.e("PurchaseUtil", "createConsumeOwnedPurchaseReq() " + ex.localizedMessage)
         }
         return req
     }
@@ -168,21 +170,29 @@ class PurchaseUtil private constructor() {
         val task = Iap.getIapClient(activity).obtainOwnedPurchases(ownedPurchaseReq)
         task.addOnSuccessListener {
             if (it != null && it.inAppPurchaseDataList != null) {
-                for (i in 0..it.inAppPurchaseDataList.size -1) {
+                for (i in 0..it.inAppPurchaseDataList.size - 1) {
                     val inAppPurchaseData = it.inAppPurchaseDataList.get(i)
                     val inAppSignature = it.inAppSignature.get(i)
-                    val success = CipherUtil.doCheck(inAppPurchaseData,
+                    val success = CipherUtil.doCheck(
+                        inAppPurchaseData,
                         inAppSignature,
-                        Key.getPublicKey())
+                        Key.getPublicKey()
+                    )
                     if (success) try {
                         val inAppPurchaseDataBean = InAppPurchaseData(inAppPurchaseData)
                         val purchaseState = inAppPurchaseDataBean.purchaseState
                         if (purchaseState == 0)
                             consumeOwnedPurchase(activity.applicationContext, inAppPurchaseData)
-                    } catch (ex:JSONException) {
-                        Log.e("PurchaseUtil","checkIfPurchasedNeedRedeliver() JSONException" + ex.localizedMessage)
-                    } catch (ex : Exception) {
-                        Log.e("PurchaseUtil","checkIfPurchasedNeedRedeliver() " + ex.localizedMessage)
+                    } catch (ex: JSONException) {
+                        Log.e(
+                            "PurchaseUtil",
+                            "checkIfPurchasedNeedRedeliver() JSONException" + ex.localizedMessage
+                        )
+                    } catch (ex: Exception) {
+                        Log.e(
+                            "PurchaseUtil",
+                            "checkIfPurchasedNeedRedeliver() " + ex.localizedMessage
+                        )
                     }
                 }
             }
@@ -190,26 +200,31 @@ class PurchaseUtil private constructor() {
             .addOnFailureListener {
                 if (it is IapApiException) {
                     val statusCode = (it as IapApiException).status.statusCode
-                    Log.e("PurchaseUtil", "checkIfPurchasedNeedRedeliver fail,statusCode: " + statusCode)
+                    Log.e(
+                        "PurchaseUtil",
+                        "checkIfPurchasedNeedRedeliver fail,statusCode: " + statusCode
+                    )
                 } else {
                     //other reasons
                 }
             }
     }
 
-     fun getSubscribed(activity: Activity) {
+    fun getSubscribed(activity: Activity) {
         val ownedPurchaseReq = OwnedPurchasesReq()
         ownedPurchaseReq.priceType = 2
         val task = Iap.getIapClient(activity).obtainOwnedPurchases(ownedPurchaseReq)
         task.addOnSuccessListener {
             if (it != null && it.inAppPurchaseDataList != null) {
                 val subscribedList = arrayListOf<String>()
-                for (i in 0..it.inAppPurchaseDataList.size -1) {
+                for (i in 0..it.inAppPurchaseDataList.size - 1) {
                     val inAppPurchaseData = it.inAppPurchaseDataList.get(i)
                     val inAppSignature = it.inAppSignature.get(i)
-                    val success = CipherUtil.doCheck(inAppPurchaseData,
+                    val success = CipherUtil.doCheck(
+                        inAppPurchaseData,
                         inAppSignature,
-                        Key.getPublicKey())
+                        Key.getPublicKey()
+                    )
                     if (success) try {
                         val inAppPurchaseDataBean = InAppPurchaseData(inAppPurchaseData)
                         val purchaseState = inAppPurchaseDataBean.purchaseState
@@ -217,20 +232,31 @@ class PurchaseUtil private constructor() {
                         if (purchaseState == InAppPurchaseData.PurchaseState.PURCHASED) {
                             subscribedList.add(inAppPurchaseDataBean.productId)
                         }
-                    } catch (ex:JSONException) {
-                        Log.e("PurchaseUtil","checkIfPurchasedNeedRedeliver() JSONException" + ex.localizedMessage)
-                    } catch (ex : Exception) {
-                        Log.e("PurchaseUtil","checkIfPurchasedNeedRedeliver() " + ex.localizedMessage)
+                    } catch (ex: JSONException) {
+                        Log.e(
+                            "PurchaseUtil",
+                            "checkIfPurchasedNeedRedeliver() JSONException" + ex.localizedMessage
+                        )
+                    } catch (ex: Exception) {
+                        Log.e(
+                            "PurchaseUtil",
+                            "checkIfPurchasedNeedRedeliver() " + ex.localizedMessage
+                        )
                     }
                 }
                 //TODO: notify game activity
-                (activity as OnLoadedSubscriptionStatusListener).onLoadedSubscriptionStatus(subscribedList)
+                (activity as OnLoadedSubscriptionStatusListener).onLoadedSubscriptionStatus(
+                    subscribedList
+                )
             }
         }
             .addOnFailureListener {
                 if (it is IapApiException) {
                     val statusCode = (it as IapApiException).status.statusCode
-                    Log.e("PurchaseUtil", "checkIfPurchasedNeedRedeliver fail,statusCode: " + statusCode)
+                    Log.e(
+                        "PurchaseUtil",
+                        "checkIfPurchasedNeedRedeliver fail,statusCode: " + statusCode
+                    )
                 } else {
                     //other reasons
                 }
@@ -238,15 +264,15 @@ class PurchaseUtil private constructor() {
     }
 
     interface OnLoadedConsumablesInfoListener {
-        fun onLoadedConsumablesInfo(list:List<ProductInfo>?)
+        fun onLoadedConsumablesInfo(list: List<ProductInfo>?)
     }
 
     interface OnLoadedSubscriptionInfoListener {
-        fun onLoadedSubscriptionInfo(list:List<ProductInfo>?)
+        fun onLoadedSubscriptionInfo(list: List<ProductInfo>?)
     }
 
     interface OnLoadedSubscriptionStatusListener {
-        fun onLoadedSubscriptionStatus(list:ArrayList<String>)
+        fun onLoadedSubscriptionStatus(list: ArrayList<String>)
     }
 
     companion object {
@@ -259,7 +285,7 @@ class PurchaseUtil private constructor() {
 
         val INSTANCE: PurchaseUtil? = null
 
-        fun getInstance() : PurchaseUtil {
+        fun getInstance(): PurchaseUtil {
             if (INSTANCE == null) return PurchaseUtil() else return INSTANCE
         }
     }

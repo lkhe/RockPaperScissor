@@ -18,10 +18,10 @@ class CipherUtil {
      */
 
     companion object {
-        const val TAG:String = "HMS_LOG_CipherUtil"
-        const val SIGN_ALGORITHMS:String = "SHA256WithRSA"
+        const val TAG: String = "HMS_LOG_CipherUtil"
+        const val SIGN_ALGORITHMS: String = "SHA256WithRSA"
 
-        fun doCheck(content:String, sign:String, publicKey:String) : Boolean {
+        fun doCheck(content: String, sign: String, publicKey: String): Boolean {
             if (TextUtils.isEmpty(publicKey)) {
                 Log.e(TAG, "publicKey is null");
                 return false

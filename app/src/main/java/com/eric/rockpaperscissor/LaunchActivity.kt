@@ -4,15 +4,14 @@ import android.content.Intent
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.widget.Button
-import android.widget.FrameLayout
 import com.huawei.hms.ads.AdParam
 import com.huawei.hms.ads.HwAds
 import com.huawei.hms.ads.banner.BannerView
 
 class LaunchActivity : AppCompatActivity() {
 
-    private lateinit var startGameButton:Button
-    private lateinit var adBanner:BannerView
+    private lateinit var startGameButton: Button
+    private lateinit var adBanner: BannerView
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -20,7 +19,7 @@ class LaunchActivity : AppCompatActivity() {
 
         startGameButton = findViewById(R.id.start_game_button)
         startGameButton.setOnClickListener {
-            startActivity(Intent(this,GameActivity::class.java))
+            startActivity(Intent(this, GameActivity::class.java))
             finish()
         }
 

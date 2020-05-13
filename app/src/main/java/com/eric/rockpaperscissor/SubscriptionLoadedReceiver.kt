@@ -4,14 +4,14 @@ import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 
-class SubscriptionLoadedReceiver(onLoadedAllListener:OnLoadedAllListener) : BroadcastReceiver() {
+class SubscriptionLoadedReceiver(onLoadedAllListener: OnLoadedAllListener) : BroadcastReceiver() {
 
     private var called = 0
-    private var onLoadedAllListener:OnLoadedAllListener? = onLoadedAllListener
+    private var onLoadedAllListener: OnLoadedAllListener? = onLoadedAllListener
 
     override fun onReceive(context: Context?, intent: Intent?) {
         if (context != null && intent?.action.equals("SubscriptionLoaded")) {
-            called +=1
+            called += 1
             if (called >= 2) {
                 onLoadedAllListener?.onLoadedAll()
                 called = 0
@@ -19,7 +19,7 @@ class SubscriptionLoadedReceiver(onLoadedAllListener:OnLoadedAllListener) : Broa
         }
     }
 
-    fun onStop(){
+    fun onStop() {
         onLoadedAllListener = null
     }
 

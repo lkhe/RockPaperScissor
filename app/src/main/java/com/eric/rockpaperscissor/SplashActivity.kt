@@ -11,12 +11,12 @@ import com.huawei.hms.ads.AudioFocusType
 import com.huawei.hms.ads.splash.SplashView
 import com.huawei.hms.ads.splash.SplashView.SplashAdLoadListener
 
-class SplashActivity : AppCompatActivity(){
+class SplashActivity : AppCompatActivity() {
 
-    private var hasPaused : Boolean  = false
-    private lateinit var splashView:SplashView
+    private var hasPaused: Boolean = false
+    private lateinit var splashView: SplashView
 
-    private val splashAdLoadListener = object:SplashAdLoadListener() {
+    private val splashAdLoadListener = object : SplashAdLoadListener() {
         override fun onAdFailedToLoad(p0: Int) {
             returnHomePage()
         }
@@ -27,7 +27,7 @@ class SplashActivity : AppCompatActivity(){
     }
 
 
-    private val timeoutHandler : Handler = Handler(Handler.Callback {
+    private val timeoutHandler: Handler = Handler(Handler.Callback {
         if (this.hasWindowFocus()) returnHomePage()
         false
     })
@@ -43,12 +43,16 @@ class SplashActivity : AppCompatActivity(){
         val adParam = AdParam.Builder().build()
         splashView = findViewById(R.id.splash_ad_view)
         splashView.setAudioFocusType(AudioFocusType.NOT_GAIN_AUDIO_FOCUS_WHEN_MUTE)
-        splashView.load(AD_ID, ActivityInfo.SCREEN_ORIENTATION_PORTRAIT, adParam, splashAdLoadListener)
+        splashView.load(
+            AD_ID,
+            ActivityInfo.SCREEN_ORIENTATION_PORTRAIT,
+            adParam,
+            splashAdLoadListener
+        )
         Log.i("SplashActivity", "End to load ad")
         timeoutHandler.removeMessages(MSG_AD_TIMEOUT)
         timeoutHandler.sendEmptyMessageDelayed(MSG_AD_TIMEOUT, AD_TIMEOUT)
     }
-
 
 
     private fun returnHomePage() {
@@ -77,7 +81,7 @@ class SplashActivity : AppCompatActivity(){
 
     override fun onDestroy() {
         super.onDestroy()
-        if (splashView != null)splashView.destroyView()
+        if (splashView != null) splashView.destroyView()
     }
 
     override fun onPause() {
@@ -91,8 +95,8 @@ class SplashActivity : AppCompatActivity(){
     }
 
     companion object {
-        const val AD_ID : String = "testq6zq98hecj"
-        const val AD_TIMEOUT:Long = 5000L
-        const val MSG_AD_TIMEOUT:Int = 1001
+        const val AD_ID: String = "testq6zq98hecj"
+        const val AD_TIMEOUT: Long = 5000L
+        const val MSG_AD_TIMEOUT: Int = 1001
     }
 }

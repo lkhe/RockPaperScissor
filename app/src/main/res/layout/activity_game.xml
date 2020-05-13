@@ -32,78 +32,40 @@
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent">
 
-<!--        <androidx.appcompat.widget.LinearLayoutCompat-->
-<!--            android:id="@+id/statistics_container"-->
-<!--            android:layout_width="match_parent"-->
-<!--            android:layout_height="wrap_content"-->
-<!--            android:orientation="horizontal" >-->
-
-<!--            <TextView-->
-<!--                android:id="@+id/scissor_statistics"-->
-<!--                android:layout_width="wrap_content"-->
-<!--                android:layout_height="wrap_content"-->
-<!--                android:layout_weight="1"-->
-<!--                android:textAlignment="center"-->
-<!--                android:text="xxx"-->
-<!--                app:layout_constraintBottom_toTopOf="@id/player_scissor"-->
-<!--                app:layout_constraintStart_toStartOf="@id/player_scissor"/>-->
-
-<!--            <TextView-->
-<!--                android:id="@+id/rock_statistics"-->
-<!--                android:layout_width="wrap_content"-->
-<!--                android:layout_height="wrap_content"-->
-<!--                android:layout_weight="1"-->
-<!--                android:textAlignment="center"-->
-<!--                android:text="xxx"-->
-<!--                app:layout_constraintBottom_toTopOf="@id/player_scissor"-->
-<!--                app:layout_constraintStart_toStartOf="@id/player_scissor"/>-->
-
-<!--            <TextView-->
-<!--                android:id="@+id/paper_statistics"-->
-<!--                android:layout_width="wrap_content"-->
-<!--                android:layout_height="wrap_content"-->
-<!--                android:layout_weight="1"-->
-<!--                android:textAlignment="center"-->
-<!--                android:text="xxx"-->
-<!--                app:layout_constraintBottom_toTopOf="@id/player_scissor"-->
-<!--                app:layout_constraintStart_toStartOf="@id/player_scissor"/>-->
-
-<!--        </androidx.appcompat.widget.LinearLayoutCompat>-->
-
-    <androidx.appcompat.widget.LinearLayoutCompat
-        android:id="@+id/emoji_container"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:orientation="horizontal" >
-
-        <androidx.emoji.widget.EmojiButton
-            android:id="@+id/player_scissor"
-            android:layout_width="wrap_content"
+        <androidx.appcompat.widget.LinearLayoutCompat
+            android:id="@+id/emoji_container"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:onClick="onPlayerMoveClicked"
-            android:text="some text"
-            android:textSize="30sp"/>
+            android:orientation="horizontal">
+
+            <androidx.emoji.widget.EmojiButton
+                android:id="@+id/player_scissor"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:onClick="onPlayerMoveClicked"
+                android:text="some text"
+                android:textSize="30sp" />
 
 
-        <androidx.emoji.widget.EmojiButton
-            android:id="@+id/player_rock"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:onClick="onPlayerMoveClicked"
-            android:text="some text"
-            android:textSize="30sp"/>
+            <androidx.emoji.widget.EmojiButton
+                android:id="@+id/player_rock"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:onClick="onPlayerMoveClicked"
+                android:text="some text"
+                android:textSize="30sp" />
 
-        <androidx.emoji.widget.EmojiButton
-            android:id="@+id/player_paper"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:onClick="onPlayerMoveClicked"
-            android:text="some text"
-            android:textSize="30sp"/>
-    </androidx.appcompat.widget.LinearLayoutCompat>
+            <androidx.emoji.widget.EmojiButton
+                android:id="@+id/player_paper"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:onClick="onPlayerMoveClicked"
+                android:text="some text"
+                android:textSize="30sp" />
+        </androidx.appcompat.widget.LinearLayoutCompat>
 
     </androidx.appcompat.widget.LinearLayoutCompat>
 
@@ -172,7 +134,7 @@
             android:textSize="20sp"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/heart_one"/>
+            app:layout_constraintTop_toBottomOf="@id/heart_one" />
 
         <androidx.emoji.widget.EmojiTextView
             android:id="@+id/heart_three"
@@ -182,7 +144,7 @@
             android:textSize="20sp"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/heart_two"/>
+            app:layout_constraintTop_toBottomOf="@id/heart_two" />
 
     </androidx.constraintlayout.widget.ConstraintLayout>
 
