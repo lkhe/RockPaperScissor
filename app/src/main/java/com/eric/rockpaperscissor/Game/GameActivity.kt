@@ -54,6 +54,7 @@ class GameActivity : AppCompatActivity(){
     private var numberOfHearts: Int = 3
     private var score: Int = 0
     private lateinit var consumablesProductInfo: List<ProductInfo>
+    private lateinit var subscribedList: ArrayList<String>
     private var playerSubscriptionEnabled: Boolean = false
     private var opponentSubscriptionEnabled: Boolean = false
 
@@ -74,10 +75,9 @@ class GameActivity : AppCompatActivity(){
         super.onResume()
         coroutineScope.launch {
             consumablesProductInfo = PurchaseUtil.getInstance().loadConsumablesProduct(this@GameActivity) ?: throw Exception("productInfoList null")
-            val subscribedList = PurchaseUtil.getInstance().getSubscribed(this@GameActivity) ?: throw Exception("subscribedList null")
-            onLoadedSubscriptionList(subscribedList)
+            subscribedList = PurchaseUtil.getInstance().getSubscribed(this@GameActivity) ?: throw Exception("subscribedList null")
             PurchaseUtil.getInstance().getUnconsumed(this@GameActivity)
-        }
+        }.invokeOnCompletion { onLoadedSubscriptionList(subscribedList) }
     }
 
     private fun init() {
@@ -285,17 +285,17 @@ class GameActivity : AppCompatActivity(){
                     }
                 }
                 TO_SUBSCRIPTION_PAGE -> {
-                    val reqCode = data.getIntExtra("REQ_CODE", -1)
-                    when (reqCode) {
-                        PurchaseUtil.REQ_CODE_SUBSCRIBE_ME -> playerSubscriptionEnabled =
-                            !playerSubscriptionEnabled
-                        PurchaseUtil.REQ_CODE_SUBSCRIBE_OPPONENT -> opponentSubscriptionEnabled =
-                            !opponentSubscriptionEnabled
-                        PurchaseUtil.REQ_CODE_SUBSCRIBE_BOTH -> {
-                            playerSubscriptionEnabled = !playerSubscriptionEnabled
-                            opponentSubscriptionEnabled = !opponentSubscriptionEnabled
-                        }
-                    }
+//                    val reqCode = data.getIntExtra("REQ_CODE", -1)
+//                    when (reqCode) {
+//                        PurchaseUtil.REQ_CODE_SUBSCRIBE_ME -> playerSubscriptionEnabled =
+//                            !playerSubscriptionEnabled
+//                        PurchaseUtil.REQ_CODE_SUBSCRIBE_OPPONENT -> opponentSubscriptionEnabled =
+//                            !opponentSubscriptionEnabled
+//                        PurchaseUtil.REQ_CODE_SUBSCRIBE_BOTH -> {
+//                            playerSubscriptionEnabled = !playerSubscriptionEnabled
+//                            opponentSubscriptionEnabled = !opponentSubscriptionEnabled
+//                        }
+//                    }
                 }
             }
         } else {
