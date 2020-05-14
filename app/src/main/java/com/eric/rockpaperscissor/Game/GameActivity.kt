@@ -22,12 +22,15 @@ import com.eric.rockpaperscissor.Common.Key
 import com.huawei.hms.iap.Iap
 import com.huawei.hms.iap.entity.OrderStatusCode
 import com.huawei.hms.iap.entity.ProductInfo
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.launch
+import java.lang.Exception
 import java.lang.StringBuilder
 
 
-class GameActivity : AppCompatActivity(),
-    PurchaseUtil.OnLoadedConsumablesInfoListener,
-    PurchaseUtil.OnLoadedSubscriptionStatusListener {
+class GameActivity : AppCompatActivity(){
 
     private lateinit var rockButton: Button
     private lateinit var paperButton: Button
@@ -51,18 +54,30 @@ class GameActivity : AppCompatActivity(),
     private var numberOfHearts: Int = 3
     private var score: Int = 0
     private lateinit var consumablesProductInfo: List<ProductInfo>
+    private lateinit var subscribedList: ArrayList<String>
     private var playerSubscriptionEnabled: Boolean = false
     private var opponentSubscriptionEnabled: Boolean = false
 
+    companion object {
+        const val TO_SUBSCRIPTION_PAGE = 1
+        private val parentJob = Job()
+        private val coroutineScope = CoroutineScope(Dispatchers.IO + parentJob)
 
+    }
     override fun onCreate(savedInstanceState: Bundle?) {
         Log.i("GameActivity", "onCreate()")
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_game)
         init()
-        PurchaseUtil.getInstance().loadConsumablesProduct(this)
-        PurchaseUtil.getInstance().getUnconsumed(this)
-        PurchaseUtil.getInstance().getSubscribed(this)
+    }
+
+    override fun onResume() {
+        super.onResume()
+        coroutineScope.launch {
+            consumablesProductInfo = PurchaseUtil.getInstance().loadConsumablesProduct(this@GameActivity) ?: throw Exception("productInfoList null")
+            subscribedList = PurchaseUtil.getInstance().getSubscribed(this@GameActivity) ?: throw Exception("subscribedList null")
+            PurchaseUtil.getInstance().getUnconsumed(this@GameActivity)
+        }.invokeOnCompletion { onLoadedSubscriptionList(subscribedList) }
     }
 
     private fun init() {
@@ -89,7 +104,7 @@ class GameActivity : AppCompatActivity(),
         shop.text = String(Character.toChars(0x1F3AA))
     }
 
-    fun onPlayerMoveClicked(view: View) {
+     fun onPlayerMoveClicked(view: View) {
         when (view.id) {
             R.id.player_scissor -> {
                 playerScissorCount += 1
@@ -207,12 +222,12 @@ class GameActivity : AppCompatActivity(),
             .setPositiveButton("Buy", DialogInterface.OnClickListener { dialog, which ->
                 dialog.dismiss()
                 //ToDO: add a product page
-                PurchaseUtil.getInstance().purchase(
-                    this,
+                coroutineScope.launch { PurchaseUtil.getInstance().purchase(
+                    this@GameActivity,
                     consumablesProductInfo[0].productId,
                     consumablesProductInfo[0].priceType,
                     PurchaseUtil.REQ_CODE_BUY_THREE_HEARTS
-                )
+                ) }
 
             })
             .setNegativeButton("No thanks", DialogInterface.OnClickListener { dialog, which ->
@@ -229,28 +244,28 @@ class GameActivity : AppCompatActivity(),
                 PurchaseUtil.REQ_CODE_BUY_THREE_HEARTS -> {
                     val purchaseResultInfo =
                         Iap.getIapClient(this).parsePurchaseResultInfoFromIntent(data)
-                    val isSecure = CipherUtil.doCheck(
-                        purchaseResultInfo.inAppPurchaseData,
-                        purchaseResultInfo.inAppDataSignature,
-                        Key.getPublicKey()
-                    )
-                    if (!isSecure) {
-                        Log.e("GameActivity", "not secure")
-                        Toast.makeText(
-                            this,
-                            "Please contact seller. code:xxxxd",
-                            Toast.LENGTH_SHORT
-                        ).show()
-                    }
                     when (purchaseResultInfo.returnCode) {
                         OrderStatusCode.ORDER_STATE_SUCCESS -> {
+                            val isSecure = CipherUtil.doCheck(
+                                purchaseResultInfo.inAppPurchaseData,
+                                purchaseResultInfo.inAppDataSignature,
+                                Key.getPublicKey()
+                            )
+                            if (!isSecure) {
+                                Log.e("GameActivity", "not secure")
+                                Toast.makeText(
+                                    this,
+                                    "Please contact seller. code:xxxxd",
+                                    Toast.LENGTH_SHORT
+                                ).show()
+                            }
                             addHearts(PurchaseUtil.REQ_CODE_BUY_THREE_HEARTS)
                             buttonsEnabled(true)
-                            PurchaseUtil.getInstance()
+                            coroutineScope.launch { PurchaseUtil.getInstance()
                                 .consumeOwnedPurchase(
-                                this,
-                                purchaseResultInfo.inAppPurchaseData
-                            )
+                                    this@GameActivity,
+                                    purchaseResultInfo.inAppPurchaseData
+                                ) }
                             Log.i(
                                 "GameActivity",
                                 "data: " + purchaseResultInfo.inAppPurchaseData.toString()
@@ -270,17 +285,17 @@ class GameActivity : AppCompatActivity(),
                     }
                 }
                 TO_SUBSCRIPTION_PAGE -> {
-                    val reqCode = data.getIntExtra("REQ_CODE", -1)
-                    when (reqCode) {
-                        PurchaseUtil.REQ_CODE_SUBSCRIBE_ME -> playerSubscriptionEnabled =
-                            !playerSubscriptionEnabled
-                        PurchaseUtil.REQ_CODE_SUBSCRIBE_OPPONENT -> opponentSubscriptionEnabled =
-                            !opponentSubscriptionEnabled
-                        PurchaseUtil.REQ_CODE_SUBSCRIBE_BOTH -> {
-                            playerSubscriptionEnabled = !playerSubscriptionEnabled
-                            opponentSubscriptionEnabled = !opponentSubscriptionEnabled
-                        }
-                    }
+//                    val reqCode = data.getIntExtra("REQ_CODE", -1)
+//                    when (reqCode) {
+//                        PurchaseUtil.REQ_CODE_SUBSCRIBE_ME -> playerSubscriptionEnabled =
+//                            !playerSubscriptionEnabled
+//                        PurchaseUtil.REQ_CODE_SUBSCRIBE_OPPONENT -> opponentSubscriptionEnabled =
+//                            !opponentSubscriptionEnabled
+//                        PurchaseUtil.REQ_CODE_SUBSCRIBE_BOTH -> {
+//                            playerSubscriptionEnabled = !playerSubscriptionEnabled
+//                            opponentSubscriptionEnabled = !opponentSubscriptionEnabled
+//                        }
+//                    }
                 }
             }
         } else {
@@ -288,8 +303,11 @@ class GameActivity : AppCompatActivity(),
             when (requestCode) {
                 TO_SUBSCRIPTION_PAGE -> {
                     // from subscription page come back, need to check subscription status again
-                    PurchaseUtil.getInstance()
-                        .getSubscribed(this)
+                    coroutineScope.launch {
+                        PurchaseUtil.getInstance()
+                            .getSubscribed(this@GameActivity)
+                    }
+
                 }
                 else -> {
                     returnHomePage()
@@ -310,16 +328,6 @@ class GameActivity : AppCompatActivity(),
     private fun returnHomePage() {
         startActivity(Intent(this, LaunchActivity::class.java))
         finish()
-    }
-
-    override fun onLoadedConsumablesInfo(list: List<ProductInfo>?) {
-        //TODO:
-        Log.i("GameActivity", "onConsumablesLoaded() " + list.toString())
-        if (list != null) {
-            consumablesProductInfo = list
-        } else {
-            //TODO:error page
-        }
     }
 
     fun onStatisticsClicked(view: View) {
@@ -419,8 +427,7 @@ class GameActivity : AppCompatActivity(),
         return dialog
     }
 
-    override fun onLoadedSubscriptionStatus(list: ArrayList<String>) {
-
+    private fun onLoadedSubscriptionList(list: ArrayList<String>) {
         playerSubscriptionEnabled = false
         opponentSubscriptionEnabled = false
 
@@ -435,9 +442,4 @@ class GameActivity : AppCompatActivity(),
             }
         }
     }
-
-    companion object {
-        const val TO_SUBSCRIPTION_PAGE = 1
-    }
-
 }

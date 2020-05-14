@@ -3,13 +3,10 @@ package com.eric.rockpaperscissor.Subscription
 import android.app.Activity
 import android.app.ProgressDialog
 import android.content.Intent
-import android.content.IntentFilter
 import android.net.Uri
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
-import android.util.Log
 import android.widget.Toast
-import androidx.localbroadcastmanager.content.LocalBroadcastManager
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.eric.rockpaperscissor.Common.CipherUtil
@@ -20,17 +17,20 @@ import com.huawei.hms.iap.Iap
 import com.huawei.hms.iap.IapClient
 import com.huawei.hms.iap.entity.OrderStatusCode
 import com.huawei.hms.iap.entity.ProductInfo
+import kotlinx.coroutines.*
 
-class SubscriptionActivity : AppCompatActivity(), PurchaseUtil.OnLoadedSubscriptionInfoListener,
-    SubscriptionAdapter.OnSubscriptionItemClicked, PurchaseUtil.OnLoadedSubscriptionStatusListener,
-    SubscriptionLoadedReceiver.OnLoadedAllListener {
+class SubscriptionActivity : AppCompatActivity(),
+    SubscriptionAdapter.OnSubscriptionItemClicked {
 
     private lateinit var subscriptionRecyclerView: RecyclerView
     private lateinit var subscriptionProductInfo: List<ProductInfo>
     private lateinit var subscribedProducts: ArrayList<String>
     private lateinit var progressDialog: ProgressDialog
-    private lateinit var subscriptionLoadedReceiver: SubscriptionLoadedReceiver
 
+    companion object {
+        private val parentJob = Job()
+        private val coroutineScope = CoroutineScope(Dispatchers.IO + parentJob)
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -39,38 +39,30 @@ class SubscriptionActivity : AppCompatActivity(), PurchaseUtil.OnLoadedSubscript
 
     override fun onResume() {
         super.onResume()
-        subscriptionLoadedReceiver =
-            SubscriptionLoadedReceiver(
-                this
-            )
-        LocalBroadcastManager.getInstance(this)
-            .registerReceiver(subscriptionLoadedReceiver, IntentFilter("SubscriptionLoaded"))
-
-        PurchaseUtil.getInstance().getSubscribed(this)
-        PurchaseUtil.getInstance().loadSubscriptionProduct(this)
 
         //progress dialog
         progressDialog = ProgressDialog(this)
         progressDialog.setMessage("Loading")
         progressDialog.show()
-    }
 
-    override fun onLoadedSubscriptionInfo(list: List<ProductInfo>?) {
-        Log.i("GameActivity", "onSubscriptionLoaded() " + list.toString())
-        if (list != null) {
-            subscriptionProductInfo = list
-            LocalBroadcastManager.getInstance(this).sendBroadcast(Intent("SubscriptionLoaded"))
+        coroutineScope.launch {
+
+            subscribedProducts = PurchaseUtil.getInstance().getSubscribed(this@SubscriptionActivity)
+                ?: throw Exception("subscribedProducts null")
+            subscriptionProductInfo =
+                PurchaseUtil.getInstance().loadSubscriptionProduct(this@SubscriptionActivity)
+                    ?: throw Exception("subscriptionProductInfo null")
+
+
+        }.invokeOnCompletion {
+            runOnUiThread {
+                onLoadedAll()
+            }
         }
     }
 
-    override fun onLoadedSubscriptionStatus(list: ArrayList<String>) {
-        if (list != null) {
-            subscribedProducts = list
-            LocalBroadcastManager.getInstance(this).sendBroadcast(Intent("SubscriptionLoaded"))
-        }
-    }
 
-    override fun onLoadedAll() {
+    private fun onLoadedAll() {
         progressDialog.dismiss()
         if (subscriptionProductInfo != null && subscribedProducts != null) {
             subscriptionRecyclerView = findViewById(R.id.subscription_recyclerView)
@@ -100,8 +92,15 @@ class SubscriptionActivity : AppCompatActivity(), PurchaseUtil.OnLoadedSubscript
             startActivity(intent)
         } else {
             if (productId != null) {
-                PurchaseUtil.getInstance()
-                    .purchase(this, productId, IapClient.PriceType.IN_APP_SUBSCRIPTION, code)
+                coroutineScope.launch {
+                    PurchaseUtil.getInstance()
+                        .purchase(
+                            this@SubscriptionActivity,
+                            productId,
+                            IapClient.PriceType.IN_APP_SUBSCRIPTION,
+                            code
+                        )
+                }
             }
         }
     }
@@ -194,8 +193,6 @@ class SubscriptionActivity : AppCompatActivity(), PurchaseUtil.OnLoadedSubscript
 
     override fun onStop() {
         super.onStop()
-        LocalBroadcastManager.getInstance(this).unregisterReceiver(subscriptionLoadedReceiver)
         (subscriptionRecyclerView.adapter as SubscriptionAdapter).onStop()
-        subscriptionLoadedReceiver.onStop()
     }
 }

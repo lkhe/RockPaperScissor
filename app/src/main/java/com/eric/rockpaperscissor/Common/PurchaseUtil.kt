@@ -11,37 +11,39 @@ import com.huawei.hms.iap.IapClient
 import com.huawei.hms.iap.entity.*
 import org.json.JSONException
 import java.lang.Exception
+import kotlin.math.truncate
 
 class PurchaseUtil private constructor() {
 
-    fun loadConsumablesProduct(activity: Activity) {
-        val iapClient = Iap.getIapClient(activity)
-        val task = iapClient.obtainProductInfo(createConsumablesProductReq())
-        task.addOnSuccessListener {
-            if (it != null && !it.productInfoList.isEmpty()) {
-                (activity as OnLoadedConsumablesInfoListener).onLoadedConsumablesInfo(it.productInfoList)
-            }
+    companion object {
+        const val REQ_CODE_BUY_THREE_HEARTS = 1001
+        const val REQ_CODE_BUY_FIVE_HEARTS = 1002
+        const val REQ_CODE_BUY_TEN_HEARTS = 1003
+        const val REQ_CODE_SUBSCRIBE_ME = 1004
+        const val REQ_CODE_SUBSCRIBE_OPPONENT = 1005
+        const val REQ_CODE_SUBSCRIBE_BOTH = 1006
+
+        val INSTANCE: PurchaseUtil? = null
+
+        fun getInstance(): PurchaseUtil {
+            if (INSTANCE == null) return PurchaseUtil() else return INSTANCE
         }
-            .addOnFailureListener {
-                Log.e("PurchaseUtil", "loadConsumablesProduct(): fail " + it.localizedMessage)
-//                Toast.makeText(activity, "Error. Cannot purchase product", Toast.LENGTH_SHORT).show()
-                (activity as OnLoadedConsumablesInfoListener).onLoadedConsumablesInfo(null)
-            }
     }
 
-    fun loadSubscriptionProduct(activity: Activity) {
+    suspend fun loadConsumablesProduct(activity: Activity) : List<ProductInfo>? {
         val iapClient = Iap.getIapClient(activity)
-        val task = iapClient.obtainProductInfo(createSubscriptionProductReq())
-        task.addOnSuccessListener {
-            if (it != null && !it.productInfoList.isEmpty()) {
-                (activity as OnLoadedSubscriptionInfoListener).onLoadedSubscriptionInfo(it.productInfoList)
-            }
-        }
-            .addOnFailureListener {
-                Log.e("PurchaseUtil", "loadSubscriptionProduct(): fail " + it.localizedMessage)
-//                Toast.makeText(activity, "Error. Cannot purchase product", Toast.LENGTH_SHORT).show()
-                (activity as OnLoadedSubscriptionInfoListener).onLoadedSubscriptionInfo(null)
-            }
+        val productInfoList: List<ProductInfo>
+        try { productInfoList =  iapClient.obtainProductInfo(createConsumablesProductReq()).await().productInfoList }
+        catch (e : Exception) { return null }
+        return productInfoList
+    }
+
+    suspend fun loadSubscriptionProduct(activity: Activity) : List<ProductInfo>? {
+        val iapClient = Iap.getIapClient(activity)
+        val productInfoList : List<ProductInfo>
+        try { productInfoList =  iapClient.obtainProductInfo(createSubscriptionProductReq()).await().productInfoList }
+        catch (e : Exception) {return null}
+        return productInfoList
     }
 
     private fun createConsumablesProductReq(): ProductInfoReq {
@@ -74,44 +76,23 @@ class PurchaseUtil private constructor() {
         return req
     }
 
-
-    fun purchase(activity: Activity, productId: String, type: Int, requestCode: Int) {
-        Log.i("PurchaseUtil", "purchase()")
+    suspend fun purchase(activity: Activity, productId: String, type: Int, requestCode: Int) {
         val iapClient = Iap.getIapClient(activity)
-        val task = iapClient.createPurchaseIntent(createPuchaseIntentReq(productId, type))
-        task.addOnSuccessListener {
-            if (it == null) {
-                Log.e("PurchaseUtil", "purchase(): purchaseintentresult is null")
-                return@addOnSuccessListener
-            } else {
-                val status = it.status
-                if (status == null) {
-                    Log.e("PurchaseUtil", "purchase(): purchaseintentresult.status is null")
-                    return@addOnSuccessListener
-                } else {
-                    if (status.hasResolution()) {
-                        try {
-                            status.startResolutionForResult(activity, requestCode)
-                        } catch (ex: IntentSender.SendIntentException) {
-                            Log.e("PurchaseUtil", ex.localizedMessage)
-                        }
-                    } else {
-                        Log.e("PurchaseUtil", "intent is null")
-                    }
+        try {
+            val purchaseIntentResult = iapClient.createPurchaseIntent(createPuchaseIntentReq(productId, type)).await()
+            try {
+                if (purchaseIntentResult.status != null && purchaseIntentResult.status.hasResolution()) {
+                    purchaseIntentResult.status.startResolutionForResult(activity, requestCode)
                 }
-            }
+            } catch (e : IntentSender.SendIntentException) {Log.e("PurchaseUtil", e.localizedMessage) }
         }
-            .addOnFailureListener {
-                Log.e("PurchaseUtil", it.localizedMessage)
-                Toast.makeText(activity, it.localizedMessage, Toast.LENGTH_SHORT).show()
-                if (it is IapApiException) {
-                    val iapException = it as IapApiException
-                    val returnCode = iapException.statusCode
-                    Log.e("PurchaseUtil", "createPurchaseIntent, returnCode:" + returnCode)
-                } else {
-                    //TODO:other exceptions
-                }
-            }
+        catch ( iap : IapApiException) {
+            Log.e("PurchaseUtil", iap.localizedMessage)
+        }
+        catch (e : Exception) {
+            Log.e("PurchaseUtil", e.localizedMessage)
+            Toast.makeText(activity, e.localizedMessage, Toast.LENGTH_SHORT).show()
+        }
     }
 
     private fun createPuchaseIntentReq(productId: String, type: Int): PurchaseIntentReq {
@@ -126,29 +107,22 @@ class PurchaseUtil private constructor() {
      * Consume the unconsumed purchase with type 0 after successfully delivering the product, then the Huawei payment server will update the order status and the user can purchase the product again.
      * @param inAppPurchaseData JSON string that contains purchase order details.
      */
-    fun consumeOwnedPurchase(context: Context, inAppPurchaseData: String) {
-        Log.i("PurchaseUtil", "consumeOwnedPurchase()")
+    suspend fun consumeOwnedPurchase(context: Context, inAppPurchaseData: String) {
         val iapClient = Iap.getIapClient(context)
-        val task = iapClient.consumeOwnedPurchase(createConsumeOwnedPurchaseReq(inAppPurchaseData))
-        task.addOnSuccessListener {
-            Log.i("PurchaseUtil", "consumeOwnedPurchase success")
+        try {
+            val consumeOwnedPurchaseResult = iapClient.consumeOwnedPurchase(createConsumeOwnedPurchaseReq(inAppPurchaseData)).await()
             Toast.makeText(
                 context,
                 "Pay success, and the product has been delivered",
                 Toast.LENGTH_SHORT
             ).show()
         }
-            .addOnFailureListener {
-                Log.e("PurchaseUtil", "consumeOwnedPuschase() failure " + it.localizedMessage)
-                Toast.makeText(context, it.localizedMessage, Toast.LENGTH_SHORT).show()
-                if (it is IapApiException) {
-                    val iapApiException = it as IapApiException
-                    val returnCode = iapApiException.status.statusCode
-                    Log.e("PurchaseUtil", "consumeOwnedPurchase fail,returnCode: " + returnCode)
-                } else {
-                    //other failure reasons
-                }
-            }
+        catch ( iap : IapApiException) {
+            Log.e("PurchaseUtil", iap.localizedMessage)
+        }
+        catch (e : Exception) {
+            Log.e("PurchaseUtil", e.localizedMessage)
+        }
     }
 
     private fun createConsumeOwnedPurchaseReq(inAppPurchaseData: String): ConsumeOwnedPurchaseReq {
@@ -162,15 +136,15 @@ class PurchaseUtil private constructor() {
         return req
     }
 
-    fun getUnconsumed(activity: Activity) {
+    suspend fun getUnconsumed(activity: Activity) {
         val ownedPurchaseReq = OwnedPurchasesReq()
         ownedPurchaseReq.priceType = 0
-        val task = Iap.getIapClient(activity).obtainOwnedPurchases(ownedPurchaseReq)
-        task.addOnSuccessListener {
-            if (it != null && it.inAppPurchaseDataList != null) {
-                for (i in 0..it.inAppPurchaseDataList.size - 1) {
-                    val inAppPurchaseData = it.inAppPurchaseDataList.get(i)
-                    val inAppSignature = it.inAppSignature.get(i)
+        try {
+            val ownedPurchaseResult = Iap.getIapClient(activity).obtainOwnedPurchases(ownedPurchaseReq).await()
+            if (ownedPurchaseResult != null && ownedPurchaseResult.inAppPurchaseDataList != null) {
+                for (i in 0..ownedPurchaseResult.inAppPurchaseDataList.size - 1) {
+                    val inAppPurchaseData = ownedPurchaseResult.inAppPurchaseDataList.get(i)
+                    val inAppSignature = ownedPurchaseResult.inAppSignature.get(i)
                     val success = CipherUtil.doCheck(
                         inAppPurchaseData,
                         inAppSignature,
@@ -195,29 +169,25 @@ class PurchaseUtil private constructor() {
                 }
             }
         }
-            .addOnFailureListener {
-                if (it is IapApiException) {
-                    val statusCode = (it as IapApiException).status.statusCode
-                    Log.e(
-                        "PurchaseUtil",
-                        "checkIfPurchasedNeedRedeliver fail,statusCode: " + statusCode
-                    )
-                } else {
-                    //other reasons
-                }
-            }
+        catch ( iap : IapApiException) {
+            val statusCode = iap.status.statusCode
+            Log.e("PurchaseUtil", "checkIfPurchasedNeedRedeliver fail,statusCode: " + statusCode)
+        }
+        catch (e : Exception) {
+            Log.e("PurchaseUtil", e.localizedMessage)
+        }
     }
 
-    fun getSubscribed(activity: Activity) {
+    suspend fun getSubscribed(activity: Activity) : ArrayList<String>? {
         val ownedPurchaseReq = OwnedPurchasesReq()
         ownedPurchaseReq.priceType = 2
-        val task = Iap.getIapClient(activity).obtainOwnedPurchases(ownedPurchaseReq)
-        task.addOnSuccessListener {
-            if (it != null && it.inAppPurchaseDataList != null) {
+        try {
+            val ownedPurchaseResult = Iap.getIapClient(activity).obtainOwnedPurchases(ownedPurchaseReq).await()
+            if (ownedPurchaseResult != null && ownedPurchaseResult.inAppPurchaseDataList != null) {
                 val subscribedList = arrayListOf<String>()
-                for (i in 0..it.inAppPurchaseDataList.size - 1) {
-                    val inAppPurchaseData = it.inAppPurchaseDataList.get(i)
-                    val inAppSignature = it.inAppSignature.get(i)
+                for (i in 0..ownedPurchaseResult.inAppPurchaseDataList.size - 1) {
+                    val inAppPurchaseData = ownedPurchaseResult.inAppPurchaseDataList.get(i)
+                    val inAppSignature = ownedPurchaseResult.inAppSignature.get(i)
                     val success = CipherUtil.doCheck(
                         inAppPurchaseData,
                         inAppSignature,
@@ -242,50 +212,17 @@ class PurchaseUtil private constructor() {
                         )
                     }
                 }
-                //TODO: notify game activity
-                (activity as OnLoadedSubscriptionStatusListener).onLoadedSubscriptionStatus(
-                    subscribedList
-                )
-            }
+                return subscribedList
+            } else {return null}
         }
-            .addOnFailureListener {
-                if (it is IapApiException) {
-                    val statusCode = (it as IapApiException).status.statusCode
-                    Log.e(
-                        "PurchaseUtil",
-                        "checkIfPurchasedNeedRedeliver fail,statusCode: " + statusCode
-                    )
-                } else {
-                    //other reasons
-                }
-            }
-    }
-
-    interface OnLoadedConsumablesInfoListener {
-        fun onLoadedConsumablesInfo(list: List<ProductInfo>?)
-    }
-
-    interface OnLoadedSubscriptionInfoListener {
-        fun onLoadedSubscriptionInfo(list: List<ProductInfo>?)
-    }
-
-    interface OnLoadedSubscriptionStatusListener {
-        fun onLoadedSubscriptionStatus(list: ArrayList<String>)
-    }
-
-    companion object {
-        const val REQ_CODE_BUY_THREE_HEARTS = 1001
-        const val REQ_CODE_BUY_FIVE_HEARTS = 1002
-        const val REQ_CODE_BUY_TEN_HEARTS = 1003
-        const val REQ_CODE_SUBSCRIBE_ME = 1004
-        const val REQ_CODE_SUBSCRIBE_OPPONENT = 1005
-        const val REQ_CODE_SUBSCRIBE_BOTH = 1006
-
-        val INSTANCE: PurchaseUtil? = null
-
-        fun getInstance(): PurchaseUtil {
-            if (INSTANCE == null) return PurchaseUtil() else return INSTANCE
+        catch ( iap : IapApiException) {
+            val statusCode = iap.status.statusCode
+            Log.e("PurchaseUtil", "checkIfPurchasedNeedRedeliver fail,statusCode: " + statusCode)
+            return null
+        }
+        catch (e : Exception) {
+            Log.e("PurchaseUtil", e.localizedMessage)
+            return null
         }
     }
-
 }
